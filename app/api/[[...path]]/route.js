@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { parseStringPromise } from 'xml2js';
+import { getAccessToken, storeSitemap } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,13 @@ function categorizeSitemap(url) {
 }
 
 export async function POST(request) {
+  const { pathname } = new URL(request.url);
+  
+  // Skip catch-all for auth routes
+  if (pathname.startsWith('/api/auth')) {
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+  }
+
   try {
     const { url } = await request.json();
 
@@ -163,13 +171,28 @@ export async function POST(request) {
       }
     });
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       mainSitemap: sitemapUrl,
       totalSitemaps: childSitemaps.length,
       sitemaps: sitemapDetails,
       counts
-    });
+    };
+
+    // Get shop from URL params if available
+    const { searchParams } = new URL(request.url);
+    const shop = searchParams.get('shop');
+    
+    // Store sitemap analysis in database if shop is authenticated
+    if (shop) {
+      const accessToken = getAccessToken(shop);
+      if (accessToken) {
+        storeSitemap(shop, baseUrl, responseData);
+        console.log('💾 Sitemap analysis saved for shop:', shop);
+      }
+    }
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Error analyzing sitemap:', error);
@@ -183,7 +206,14 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
+export async function GET(request) {
+  const { pathname } = new URL(request.url);
+  
+  // Skip catch-all for auth routes
+  if (pathname.startsWith('/api/auth')) {
+    return NextResponse.json({ error: 'Not Found' }, { status: 404 });
+  }
+
   return NextResponse.json({
     message: 'Sitemap Explorer API',
     endpoints: {
