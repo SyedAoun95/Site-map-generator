@@ -349,7 +349,7 @@ const App = () => {
           </Card>
         )}
       </div>
-    </div> 
+    </div>      
   );
 };
 
