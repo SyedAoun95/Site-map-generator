@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import createApp from '@shopify/app-bridge';
+import { Redirect } from '@shopify/app-bridge/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +31,50 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [appBridge, setAppBridge] = useState(null);
+
+  // Initialize App Bridge and check authentication
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const shop = params.get('shop');
+      const host = params.get('host');
+
+      if (!shop || !host) return;
+
+      // Initialize App Bridge for embedded app
+      const app = createApp({
+        apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY,
+        host,
+        forceRedirect: true,
+      });
+      setAppBridge(app);
+
+      // Check if user is authenticated
+      fetch(`/api/check-auth?shop=${encodeURIComponent(shop)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data?.authenticated) {
+            // Redirect to OAuth (outside iframe)
+            const redirect = Redirect.create(app);
+            redirect.dispatch(
+              Redirect.Action.REMOTE,
+              `/api/auth?shop=${encodeURIComponent(shop)}`
+            );
+          }
+        })
+        .catch(() => {
+          // On error, also trigger OAuth
+          const redirect = Redirect.create(app);
+          redirect.dispatch(
+            Redirect.Action.REMOTE,
+            `/api/auth?shop=${encodeURIComponent(shop)}`
+          );
+        });
+    } catch (err) {
+      // Silent catch - only runs client-side
+    }
+  }, []);
 
   const handleAnalyze = async () => {
     if (!url.trim()) {
@@ -144,11 +190,10 @@ const App = () => {
             <Search className="w-12 h-12 text-primary" />
           </div>
           <h1 className="text-5xl font-bold text-slate-900 mb-4">
-            Sitemap Explorer
+           Sitemap Explorer
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Discover the content structure of any website by analyzing their sitemap.xml
-          </p>
+        Discover your Shopify store’s structure and content with Sitemap Explorer using sitemap.xml.        </p>
         </div>
 
         {/* Input Section */}
@@ -304,7 +349,7 @@ const App = () => {
           </Card>
         )}
       </div>
-    </div>
+    </div> 
   );
 };
 
