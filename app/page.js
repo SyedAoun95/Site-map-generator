@@ -1,6 +1,8 @@
 'use client';
 
 import { AppProvider } from '@shopify/polaris';
+import Image from 'next/image';
+import appIcon from '../app/img/appicon.png';
 import enTranslations from '@shopify/polaris/locales/en.json';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -133,7 +135,7 @@ const App = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}
-          <div className="text-center mb-12">
+          {/* <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-4">
               <Search className="w-12 h-12 text-primary" />
             </div>
@@ -141,7 +143,26 @@ const App = () => {
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Discover your Shopify store’s structure and content with Sitemap Explorer using sitemap.xml.
             </p>
-          </div>
+          </div> */}
+       <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-12">
+  {/* Icon with theme gradient */}
+  <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-tr from-primary to-indigo-600">
+    <Search className="w-5 h-5 text-white" />
+  </div>
+
+  {/* Heading & description */}
+  <div className="text-center md:text-left">
+    <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
+      Sitemap Explorer
+    </h1>
+    <p className="text-sm md:text-base text-slate-700 mt-1 max-w-md mx-auto md:mx-0">
+      Explore your Shopify store’s sitemap <span className="font-semibold text-indigo-600">quickly & easily</span> and generate actionable reports.
+    </p>
+  </div>
+</div>
+
+
+
 
           {/* Input Section */}
           <Card className="mb-8 shadow-lg">
@@ -153,11 +174,17 @@ const App = () => {
             </CardHeader> */}
             <CardHeader className="p-6">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <div className="rounded-lg p-3 bg-gradient-to-br from-primary/10 to-indigo-50 shadow-sm"></div>
-                </div>
+<div className="flex-shrink-0">
+<div className="flex-shrink-0 flex items-center justify-center">
+  <Image src={appIcon} alt="App Icon" width={24} height={24} />
+</div>
+
+
+</div>
+
+
                 <div className="min-w-0">
-                  <h3 className="text-lg font-semibold text-slate-900">Sitemap Analyzer</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">Analyze Your Sitemap</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     This app automatically detects your store URL and analyzes sitemap.xml to generate a clear, actionable report.
                   </p>
