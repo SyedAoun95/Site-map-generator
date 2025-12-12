@@ -144,22 +144,28 @@ const App = () => {
               Discover your Shopify store’s structure and content with Sitemap Explorer using sitemap.xml.
             </p>
           </div> */}
-       <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-12">
-  {/* Icon with theme gradient */}
-  <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-tr from-primary to-indigo-600">
-    <Search className="w-5 h-5 text-white" />
-  </div>
+      <Card className="bg-transparent shadow-none border-0 rounded-none mb-12">
+  <CardContent className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 p-0">
+    {/* Icon with rounded background */}
+    <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-tr from-primary to-indigo-600">
+      <Search className="w-5 h-5 text-white" />
+    </div>
 
-  {/* Heading & description */}
-  <div className="text-center md:text-left">
-    <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
-      Sitemap Explorer
-    </h1>
-    <p className="text-sm md:text-base text-slate-700 mt-1 max-w-md mx-auto md:mx-0">
-      Explore your Shopify store’s sitemap <span className="font-semibold text-indigo-600">quickly & easily</span> and generate actionable reports.
-    </p>
-  </div>
-</div>
+    {/* Heading & description */}
+    <div className="text-center md:text-left">
+      <h1 className="Polaris-Heading text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
+        Sitemap Explorer
+      </h1>
+      <p className="Polaris-TextStyle text-sm md:text-base text-slate-700 mt-1 max-w-md mx-auto md:mx-0">
+        Explore your Shopify store’s sitemap{' '}
+        <span className="Polaris-TextStyle--variationStrong text-indigo-600 font-semibold">
+          quickly & easily
+        </span>{' '}
+        and generate actionable reports.
+      </p>
+    </div>
+  </CardContent>
+</Card>
 
 
 
