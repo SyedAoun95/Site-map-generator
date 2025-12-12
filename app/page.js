@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,8 +25,19 @@ import {
 } from 'lucide-react';
 
 const App = () => {
+
+  const searchParams = useSearchParams();
+  const shop = searchParams.get("shop");
+
+  useEffect(() => {
+    if (shop) {
+      setUrl(`https://${shop}`);
+    }
+  }, [shop]);
+
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
 
