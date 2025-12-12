@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,8 +26,7 @@ import {
 } from 'lucide-react';
 
 const App = () => {
-
-  const searchParams = useSearchParams();
+    const searchParams = useSearchParams();
   const shop = searchParams.get("shop");
 
   useEffect(() => {
@@ -37,7 +37,6 @@ const App = () => {
 
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
 
@@ -158,19 +157,20 @@ const App = () => {
             Sitemap Explorer
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Discover the content structure of any website by analyzing their sitemap.xml
+            Discover your Shopify store’s structure and content with Sitemap Explorer using sitemap.xml.
           </p>
         </div>
 
         {/* Input Section */}
         <Card className="mb-8 shadow-lg">
-          <CardHeader>
-            <CardTitle>Enter Website URL</CardTitle>
-            <CardDescription>
-              Enter any website URL to analyze its sitemap structure
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+       <CardHeader>
+  <CardTitle>Sitemap Analyzer</CardTitle>
+  <CardDescription>
+    This app automatically detects your store URL. Click the button below to generate your sitemap report.
+  </CardDescription>
+</CardHeader>
+
+          {/* <CardContent>
             <div className="flex gap-3">
               <Input
                 type="text"
@@ -197,7 +197,39 @@ const App = () => {
                 )}
               </Button>
             </div>
-          </CardContent>
+          </CardContent> */}
+
+<CardContent>
+  <div className="flex flex-col items-center gap-3">
+    <Button
+      onClick={handleAnalyze}
+      disabled={loading}
+      size="lg"
+      className="px-8"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          Analyzing...
+        </>
+      ) : (
+        "Generate Report"
+      )}
+    </Button>
+
+    <Input
+      type="text"
+      placeholder="https://www.example.com"
+      value={url}
+      onChange={(e) => setUrl(e.target.value)}
+      onKeyPress={handleKeyPress}
+      className="text-lg w-full md:w-1/2"
+      disabled={loading}
+    />
+  </div>
+</CardContent>
+
+
         </Card>
 
         {/* Error Alert */}
