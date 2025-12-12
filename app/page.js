@@ -332,21 +332,19 @@ const App = () => {
             // </Card>
             <Card className="shadow-lg rounded-xl bg-gradient-to-br from-primary/5 to-indigo-50">
   <CardContent className="pt-12 pb-12 text-center">
-    {/* Icon with subtle theme gradient */}
+    {/* Icon */}
     <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-tr from-primary to-indigo-600">
       <Search className="w-7 h-7 text-white" />
     </div>
 
     {/* Heading */}
-    <h3 className="text-2xl md:text-3xl font-extrabold text-indigo-900 mb-2">
-      {shop ? "Shopify Store Detected!" : "Ready to Explore"}
+    <h3 className="text-xl md:text-2xl font-bold text-black mb-2">
+      Ready to Explore
     </h3>
 
     {/* Tagline */}
-    <p className="text-sm md:text-base text-indigo-700 max-w-md mx-auto">
-      {shop
-        ? "Your store sitemap is ready to explore."
-        : "Detecting your Shopify store automatically..."}
+    <p className="text-sm md:text-base text-black max-w-md mx-auto">
+      Just one click away from exploring your store’s full sitemap.
     </p>
   </CardContent>
 </Card>
