@@ -337,14 +337,16 @@ const App = () => {
       <Search className="w-7 h-7 text-white" />
     </div>
 
-    {/* Heading */}
+    {/* Heading using Polaris TextStyle for boldness */}
     <h3 className="text-xl md:text-2xl font-bold text-black mb-2">
-      Ready to Explore
+      <span className="Polaris-TextStyle--variationStrong">Ready to Explore</span>
     </h3>
 
-    {/* Tagline */}
+    {/* Tagline using Polaris TextStyle for subtle style */}
     <p className="text-sm md:text-base text-black max-w-md mx-auto">
-      Just one click away from exploring your store’s full sitemap.
+      <span className="Polaris-TextStyle--variationSubdued">
+        Just one click away from exploring your store’s full sitemap.
+      </span>
     </p>
   </CardContent>
 </Card>
