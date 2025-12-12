@@ -323,13 +323,34 @@ const App = () => {
           )}
 
           {!results && !error && !loading && (
-            <Card className="shadow-lg">
-              <CardContent className="pt-12 pb-12 text-center">
-                <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">Ready to Explore</h3>
-                <p className="text-muted-foreground">Enter a website URL above to start analyzing its sitemap structure</p>
-              </CardContent>
-            </Card>
+            // <Card className="shadow-lg">
+            //   <CardContent className="pt-12 pb-12 text-center">
+            //     <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            //     <h3 className="text-xl font-semibold text-slate-900 mb-2">Ready to Explore</h3>
+            //     <p className="text-muted-foreground">Enter a website URL above to start analyzing its sitemap structure</p>
+            //   </CardContent>
+            // </Card>
+            <Card className="shadow-lg rounded-xl bg-gradient-to-br from-primary/5 to-indigo-50">
+  <CardContent className="pt-12 pb-12 text-center">
+    {/* Icon with subtle theme gradient */}
+    <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-tr from-primary to-indigo-600">
+      <Search className="w-7 h-7 text-white" />
+    </div>
+
+    {/* Heading */}
+    <h3 className="text-2xl md:text-3xl font-extrabold text-indigo-900 mb-2">
+      {shop ? "Shopify Store Detected!" : "Ready to Explore"}
+    </h3>
+
+    {/* Tagline */}
+    <p className="text-sm md:text-base text-indigo-700 max-w-md mx-auto">
+      {shop
+        ? "Your store sitemap is ready to explore."
+        : "Detecting your Shopify store automatically..."}
+    </p>
+  </CardContent>
+</Card>
+
           )}
         </div>
       </div>
