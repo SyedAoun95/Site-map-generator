@@ -22,7 +22,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-import { Badge } from '@shopify/polaris';
+import { Badge, InlineStack, BlockStack, Text } from '@shopify/polaris';
+
+
 
 import { 
   Table, 
@@ -144,7 +146,7 @@ const App = () => {
               Discover your Shopify store’s structure and content with Sitemap Explorer using sitemap.xml.
             </p>
           </div> */}
-      <Card className="bg-transparent shadow-none border-0 rounded-none mb-12">
+     <Card className="bg-transparent shadow-none border-0 rounded-none mb-12">
   <CardContent className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 p-0">
     {/* Icon with rounded background */}
     <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-tr from-primary to-indigo-600">
@@ -170,6 +172,7 @@ const App = () => {
 
 
 
+
           {/* Input Section */}
           <Card className="mb-8 shadow-lg">
             {/* <CardHeader>
@@ -178,47 +181,78 @@ const App = () => {
                 This app automatically detects your store URL. Click the button below to generate your sitemap report.
               </CardDescription>
             </CardHeader> */}
-            <CardHeader className="p-6">
-              <div className="flex items-start gap-4">
-<div className="flex-shrink-0">
-<div className="flex-shrink-0 flex items-center justify-center">
-  <Image src={appIcon} alt="App Icon" width={24} height={24} />
-</div>
+<CardHeader className="p-6">
+  <div className="flex items-center gap-4">
+
+    {/* ICON */}
+    <div className="flex-shrink-0">
+      <Image src={appIcon} alt="App Icon" width={32} height={32} className="rounded-full" />
+    </div>
+
+    {/* TEXT AREA */}
+    <div className="min-w-0 space-y-1">
+
+      {/* Polaris Heading - headingLg default style */}
+   <h3 className="text-lg font-semibold text-slate-900">Analyze Your Sitemap</h3>
 
 
-</div>
+      {/* Polaris Description */}
+      <Text 
+        as="p" 
+        variant="bodyMd" 
+        tone="subdued" 
+        className="mt-1 max-w-md text-slate-600"
+      >
+        This app automatically detects your store URL and analyzes sitemap.xml to generate a clear, actionable report.
+      </Text>
+
+      {/* Badge row */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {shop ? (
+          <>
+            <Badge status="success">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="font-medium">Detected:</span>
+                <span className="font-semibold">{shop}</span>
+              </span>
+            </Badge>
+
+            <span className="flex items-center gap-2 text-sm font-medium text-green-700">
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-600">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-3 h-3 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-7.364 7.364a1 1 0 01-1.414 0L3.293 9.414a1 1 0 011.414-1.414l3.343 3.343 6.657-6.657a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <span className="animate-pulse">Click Generate Report to start</span>
+            </span>
+          </>
+        ) : (
+          <>
+            <Badge status="info">Auto-detect ready</Badge>
+            <span className="text-xs text-slate-400 italic">
+              Click Generate Report to start
+            </span>
+          </>
+        )}
+      </div>
+
+    </div>
+  </div>
+</CardHeader>
 
 
-                <div className="min-w-0">
-                  <h3 className="text-lg font-semibold text-slate-900">Analyze Your Sitemap</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    This app automatically detects your store URL and analyzes sitemap.xml to generate a clear, actionable report.
-                  </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-  {shop ? (
-    <>
-      <Badge status="success" className="text-xs bg-green-100 text-green-800 font-semibold">
-        Detected: {shop}
-      </Badge>
-      <span className="text-sm text-green-700 font-medium animate-pulse">
-        ✅ Click Generate Report to start
-      </span>
-    </>
-  ) : (
-    <>
-      <Badge status="info" className="text-xs bg-blue-100 text-blue-700">
-        Auto-detect ready
-      </Badge>
-      <span className="text-xs text-slate-400 italic">
-        Click Generate Report to start
-      </span>
-    </>
-  )}
-</div>
 
-                </div>
-              </div>
-            </CardHeader>
+
 
             <CardContent>
               <div className="flex flex-col items-center gap-3">
@@ -365,3 +399,4 @@ const App = () => {
 };
 
 export default App;
+
