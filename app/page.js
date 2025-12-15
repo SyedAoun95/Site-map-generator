@@ -289,16 +289,16 @@ const stats = [
   { title: 'Pages', count: uiCounts.pages, icon: FileText, color: 'text-orange-600', bgColor: 'bg-orange-50' },
 ];
 
-// MAIN sitemap url (professional display)
-const siteOrigin = (() => {
-  try {
-    return new URL(url?.trim()).origin;
-  } catch (e) {
-    return (url || "").replace(/\/$/, "");
-  }
-})();
+// // MAIN sitemap url (professional display)
+// const siteOrigin = (() => {
+//   try {
+//     return new URL(url?.trim()).origin;
+//   } catch (e) {
+//     return (url || "").replace(/\/$/, "");
+//   }
+// })();
 
-const mainSitemapUrl = results?.mainSitemapUrl || `${siteOrigin}/sitemap.xml`;
+// const mainSitemapUrl = results?.mainSitemapUrl || `${siteOrigin}/sitemap.xml`;
 
 
 const filteredSitemaps =
@@ -577,7 +577,7 @@ const loadUrlsForType = async (typeKey) => {
 
 
               </div>
-<Card className="shadow-lg">
+{/* <Card className="shadow-lg">
   <CardHeader className="pb-3">
     <CardTitle className="text-base font-semibold">Main sitemap link</CardTitle>
     <CardDescription>Primary sitemap URL for your store</CardDescription>
@@ -616,7 +616,7 @@ const loadUrlsForType = async (typeKey) => {
       </div>
     </div>
   </CardContent>
-</Card>
+</Card> */}
 
 
 
