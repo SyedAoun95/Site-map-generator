@@ -1,6 +1,8 @@
 'use client';
 
 import { AppProvider } from '@shopify/polaris';
+import createApp from '@shopify/app-bridge';
+import { Redirect } from '@shopify/app-bridge/actions';
 import Image from 'next/image';
 import appIcon from '../app/img/appicon.png';
 import enTranslations from '@shopify/polaris/locales/en.json';
@@ -50,6 +52,43 @@ const App = () => {
       setUrl(`https://${shop}`);
     }
   }, [shop]);
+  useEffect(() => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const shopParam = params.get('shop');
+    const host = params.get('host');
+
+    if (!shopParam || !host) return;
+
+    const app = createApp({
+      apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY,
+      host,
+      forceRedirect: true,
+    });
+
+    fetch(`/api/check-auth?shop=${encodeURIComponent(shopParam)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data?.authenticated) {
+          const redirect = Redirect.create(app);
+          redirect.dispatch(
+            Redirect.Action.REMOTE,
+            `/api/auth?shop=${encodeURIComponent(shopParam)}`
+          );
+        }
+      })
+      .catch(() => {
+        const redirect = Redirect.create(app);
+        redirect.dispatch(
+          Redirect.Action.REMOTE,
+          `/api/auth?shop=${encodeURIComponent(shopParam)}`
+        );
+      });
+  } catch (e) {
+    // silent
+  }
+}, []);
+
 
   const handleAnalyze = async () => {
     if (!url.trim()) {
