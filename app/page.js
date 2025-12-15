@@ -442,11 +442,11 @@ const filteredSitemaps =
           tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 0);
       }}
-      className="text-left w-full focus:outline-none rounded-xl focus:ring-2 focus:ring-primary focus:ring-offset-2"
+     className="text-left w-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
       aria-pressed={isActive}
       aria-label={`Show ${stat.title} sitemaps`}
     >
-      <Card className={`shadow-md hover:shadow-lg transition-shadow hover:cursor-pointer ${isActive ? "ring-2 ring-primary" : ""}`}>
+      <Card className={`shadow-md hover:shadow-lg transition-shadow hover:cursor-pointer ${isActive ? "ring-2 ring-indigo-600" : ""}`}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
