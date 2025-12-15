@@ -6,7 +6,7 @@ import { Redirect } from '@shopify/app-bridge/actions';
 import Image from 'next/image';
 import appIcon from '../app/img/appicon.png';
 import enTranslations from '@shopify/polaris/locales/en.json';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,10 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  // ### CHANGE 1 (ADD THIS)
+const [activeType, setActiveType] = useState(null); // products | collections | blogs | pages | null
+const tableRef = useRef(null);
+
 
   useEffect(() => {
     if (shop) {
@@ -152,7 +156,7 @@ const App = () => {
     csv += `Other,${results.counts.other}\n`;
     csv += '\nSitemap URL,Type,URL Count\n';
     
-    results.sitemaps?.forEach(sitemap => {
+   dedupeSitemapsPreferNonLocale(results?.sitemaps || []).forEach(sitemap => {
       csv += `"${sitemap.url}",${sitemap.type},${sitemap.count}\n`;
     });
 
@@ -164,12 +168,95 @@ const App = () => {
     link.click();
   };
 
+  // ### CHANGE A (ADD) - remove locale prefix (/en/, /en-ca/) for dedupe key
+const stripLocaleFromPath = (pathname) =>
+  pathname.replace(/^\/[a-z]{2}(-[a-z]{2})?\//i, "/");
+
+const isLocalizedPath = (pathname) =>
+  /^\/[a-z]{2}(-[a-z]{2})?\//i.test(pathname);
+
+const normalizeSitemapKey = (urlStr) => {
+  try {
+    const u = new URL(urlStr);
+    const normalizedPath = stripLocaleFromPath(u.pathname);
+    return `${u.origin}${normalizedPath}${u.search}`; // keep query as well
+  } catch (e) {
+    return urlStr;
+  }
+};
+
+const dedupeSitemapsPreferNonLocale = (list = []) => {
+  const map = new Map();
+
+  for (const item of list) {
+    const key = normalizeSitemapKey(item.url);
+
+    if (!map.has(key)) {
+      map.set(key, item);
+      continue;
+    }
+
+    // If existing is localized but new one is non-localized, replace it
+    try {
+      const existing = map.get(key);
+      const existingPath = new URL(existing.url).pathname;
+      const currentPath = new URL(item.url).pathname;
+
+      const existingIsLoc = isLocalizedPath(existingPath);
+      const currentIsLoc = isLocalizedPath(currentPath);
+
+      if (existingIsLoc && !currentIsLoc) {
+        map.set(key, item);
+      }
+    } catch (e) {
+      // ignore parsing issues
+    }
+  }
+
+  return Array.from(map.values());
+};
+
+
+  // Get sitemap URL for a given type (products, collections, blogs, pages)
+// const getSitemapUrlForType = (type) => {
+//   const list = results?.sitemaps || [];
+//   const t = String(type || "").toLowerCase();
+
+//   const matches = list.filter(
+//     (s) => String(s.type || "").toLowerCase() === t
+//   );
+
+//   if (!matches.length) return null;
+
+//   // Prefer non-locale URL (no /en/ or /en-ca/ in path)
+//   const nonLocalized = matches.find((s) => {
+//     try {
+//       const u = new URL(s.url);
+//       return !/^\/[a-z]{2}(-[a-z]{2})?\//i.test(u.pathname);
+//     } catch (e) {
+//       return true;
+//     }
+//   });
+
+//   return (nonLocalized || matches[0]).url;
+// };
+
   const stats = [
     { title: 'Products', count: results?.counts?.products || 0, icon: Package, color: 'text-blue-600', bgColor: 'bg-blue-50' },
     { title: 'Collections', count: results?.counts?.collections || 0, icon: Layers, color: 'text-green-600', bgColor: 'bg-green-50' },
     { title: 'Blogs', count: results?.counts?.blogs || 0, icon: BookOpen, color: 'text-purple-600', bgColor: 'bg-purple-50' },
     { title: 'Pages', count: results?.counts?.pages || 0, icon: FileText, color: 'text-orange-600', bgColor: 'bg-orange-50' },
   ];
+// ### FIX 1 (ADD/REPLACE HERE) - dedupe first, then filter
+const dedupedSitemaps = dedupeSitemapsPreferNonLocale(results?.sitemaps || []);
+
+const filteredSitemaps =
+  dedupedSitemaps.filter((s) => {
+    if (!activeType) return true;
+    return String(s.type || "").toLowerCase() === activeType;
+  }) || [];
+
+
 
   return (
     <AppProvider i18n={enTranslations}>
@@ -337,24 +424,48 @@ const App = () => {
           {results && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat) => {
-                  const Icon = stat.icon;
-                  return (
-                    <Card key={stat.title} className="shadow-md hover:shadow-lg transition-shadow">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                            <h3 className="text-4xl font-bold text-slate-900 mt-2">{stat.count.toLocaleString()}</h3>
-                          </div>
-                          <div className={`${stat.bgColor} p-3 rounded-lg`}>
-                            <Icon className={`w-8 h-8 ${stat.color}`} />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+{/* ### CHANGE 3 (REPLACE WHOLE stats.map WITH THIS) */}
+{stats.map((stat) => {
+  const Icon = stat.icon;
+  const typeKey = stat.title.toLowerCase(); // products / collections / blogs / pages
+  const isActive = activeType === typeKey;
+
+  return (
+    <button
+      key={stat.title}
+      type="button"
+      onClick={() => {
+        setActiveType((prev) => (prev === typeKey ? null : typeKey));
+
+        // scroll to table
+        setTimeout(() => {
+          tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 0);
+      }}
+      className="text-left w-full focus:outline-none rounded-xl focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      aria-pressed={isActive}
+      aria-label={`Show ${stat.title} sitemaps`}
+    >
+      <Card className={`shadow-md hover:shadow-lg transition-shadow hover:cursor-pointer ${isActive ? "ring-2 ring-primary" : ""}`}>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+              <h3 className="text-4xl font-bold text-slate-900 mt-2">
+                {stat.count.toLocaleString()}
+              </h3>
+            </div>
+            <div className={`${stat.bgColor} p-3 rounded-lg`}>
+              <Icon className={`w-8 h-8 ${stat.color}`} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </button>
+  );
+})}
+
+
               </div>
 
               <div className="flex gap-3 justify-end">
@@ -362,10 +473,14 @@ const App = () => {
                 <Button onClick={exportToCSV} variant="outline">Export as CSV</Button>
               </div>
 
-              <Card className="shadow-lg">
+             <Card className="shadow-lg" ref={tableRef}>
                 <CardHeader>
                   <CardTitle>Sitemap Details</CardTitle>
-                  <CardDescription>Total Sitemaps Found: {results.totalSitemaps}</CardDescription>
+                 <CardDescription>
+  Total Sitemaps Found: {dedupedSitemaps.length}
+  {activeType ? ` | Showing: ${filteredSitemaps.length} ${activeType}` : ""}
+</CardDescription>
+
                 </CardHeader>
                 <CardContent>
                   <div className="rounded-lg border">
@@ -379,7 +494,9 @@ const App = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {results.sitemaps?.map((sitemap, index) => (
+                       {/* ### CHANGE 4B */}
+{filteredSitemaps.map((sitemap, index) => (
+
                           <TableRow key={index}>
                             <TableCell className="font-mono text-sm max-w-md truncate">{sitemap.url}</TableCell>
                             <TableCell>
@@ -387,7 +504,7 @@ const App = () => {
                             </TableCell>
                             <TableCell className="text-right font-semibold">{sitemap.count?.toLocaleString() || 0}</TableCell>
                             <TableCell>
-                              <a href={sitemap.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                              <a href={sitemap.url}  rel="noopener noreferrer" className="text-primary hover:text-primary/80">
                                 <ExternalLink className="w-4 h-4" />
                               </a>
                             </TableCell>
