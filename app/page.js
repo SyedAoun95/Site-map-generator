@@ -116,30 +116,36 @@ setUrlError(null);
 
 
     try {
-      const response = await fetch('/api/sitemap', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: url.trim() }),
-      });
+  let inputUrl = url.trim();
 
-      const data = await response.json();
+  try {
+    inputUrl = new URL(inputUrl).origin; // any link -> domain
+  } catch (e) {}
 
-      if (!response.ok) {
-        setError(data.error || 'Failed to analyze sitemap');
-        return;
-      }
+  const response = await fetch('/api/sitemap', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: inputUrl }),
+  });
 
-      setResults(data);
-    } catch (err) {
-      setError('Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const data = await response.json();
 
-  const handleKeyPress = (e) => {
+  if (!response.ok) {
+    setError(data.error || 'Failed to analyze sitemap');
+    return;
+  }
+
+  setResults(data);
+} catch (err) {
+  setError('Network error. Please try again.');
+} finally {
+  setLoading(false);
+}
+}; //  ADD THIS - handleAnalyze close
+
+
+const handleKeyPress = (e) => {
+
     if (e.key === 'Enter') {
       handleAnalyze();
     }
@@ -283,6 +289,16 @@ const stats = [
   { title: 'Pages', count: uiCounts.pages, icon: FileText, color: 'text-orange-600', bgColor: 'bg-orange-50' },
 ];
 
+// MAIN sitemap url (professional display)
+const siteOrigin = (() => {
+  try {
+    return new URL(url?.trim()).origin;
+  } catch (e) {
+    return (url || "").replace(/\/$/, "");
+  }
+})();
+
+const mainSitemapUrl = results?.mainSitemapUrl || `${siteOrigin}/sitemap.xml`;
 
 
 const filteredSitemaps =
@@ -559,6 +575,45 @@ const loadUrlsForType = async (typeKey) => {
 
 
               </div>
+<CardContent>
+  <div className="rounded-lg border bg-white p-4">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex-1 min-w-0">
+        <Text as="p" variant="bodySm" tone="subdued">
+          <span className="font-semibold text-slate-800">Main sitemap link</span>
+        </Text>
+
+        <a
+          href={mainSitemapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 block font-mono text-sm text-indigo-600 hover:underline break-all"
+        >
+          {mainSitemapUrl}
+        </a>
+      </div>
+
+      <div className="flex items-center gap-2 md:justify-end">
+        <Button
+          variant="outline"
+          onClick={() => navigator.clipboard.writeText(mainSitemapUrl)}
+          className="whitespace-nowrap"
+        >
+          Copy
+        </Button>
+
+      <Button
+  onClick={() => window.open(mainSitemapUrl, "_blank", "noopener,noreferrer")}
+  className="whitespace-nowrap bg-gradient-to-r from-primary to-indigo-600 text-white hover:opacity-95"
+>
+  Open
+</Button>
+
+      </div>
+    </div>
+  </div>
+</CardContent>
+
 
               <div className="flex gap-3 justify-end">
                 <Button onClick={exportToJSON} variant="outline">Export as JSON</Button>
@@ -595,11 +650,11 @@ const loadUrlsForType = async (typeKey) => {
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary capitalize">{sitemap.type}</span>
                             </TableCell>
                             <TableCell className="text-right font-semibold">{sitemap.count?.toLocaleString() || 0}</TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                               <a href={sitemap.url}  rel="noopener noreferrer" className="text-primary hover:text-primary/80">
                                 <ExternalLink className="w-4 h-4" />
                               </a>
-                            </TableCell>
+                            </TableCell> */}
                           </TableRow>
                         ))}
                       </TableBody>
