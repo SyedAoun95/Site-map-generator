@@ -1,6 +1,6 @@
 'use client';
 
-import { AppProvider } from '@shopify/polaris';
+import { AppProvider, Banner, BlockStack, Text, Badge } from '@shopify/polaris';
 import createApp from '@shopify/app-bridge';
 import { Redirect } from '@shopify/app-bridge/actions';
 import Image from 'next/image';
@@ -21,10 +21,10 @@ import {
   Loader2, 
   Search,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 
-import { Badge, InlineStack, BlockStack, Text } from '@shopify/polaris';
 
 
 
@@ -440,23 +440,9 @@ const loadUrlsForType = async (typeKey) => {
               </span>
             </Badge>
 
-            <span className="flex items-center gap-2 text-sm font-medium text-green-700">
-              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-600">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-3 h-3 text-white"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-7.364 7.364a1 1 0 01-1.414 0L3.293 9.414a1 1 0 011.414-1.414l3.343 3.343 6.657-6.657a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-              <span className="animate-pulse">Click Generate Report to start</span>
-            </span>
+     
+
+
           </>
         ) : (
           <>
@@ -519,6 +505,20 @@ const loadUrlsForType = async (typeKey) => {
           {/* Results Section */}
           {results && (
             <div className="space-y-8">
+<div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3">
+  <p className="text-sm text-slate-700">
+    <span className="font-semibold text-slate-900">Tip:</span>{" "}
+    Click any result card — <span className="font-semibold">Products</span>,{" "}
+    <span className="font-semibold">Collections</span>,{" "}
+    <span className="font-semibold">Pages</span>, or{" "}
+    <span className="font-semibold">Blogs</span> — and the matching URLs will appear below.
+  </p>
+</div>
+
+
+
+
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 {/* ### CHANGE 3 (REPLACE WHOLE stats.map WITH THIS) */}
 {stats.map((stat) => {
@@ -563,8 +563,10 @@ const loadUrlsForType = async (typeKey) => {
                 {stat.count.toLocaleString()}
               </h3>
             </div>
-            <div className={`${stat.bgColor} p-3 rounded-lg`}>
-              <Icon className={`w-8 h-8 ${stat.color}`} />
+          <div className={`${stat.bgColor} p-2 rounded-lg`}>
+
+             <Icon className={`w-6 h-6 ${stat.color}`} />
+
             </div>
           </div>
         </CardContent>
@@ -575,44 +577,47 @@ const loadUrlsForType = async (typeKey) => {
 
 
               </div>
-<CardContent>
-  <div className="rounded-lg border bg-white p-4">
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div className="flex-1 min-w-0">
-        <Text as="p" variant="bodySm" tone="subdued">
-          <span className="font-semibold text-slate-800">Main sitemap link</span>
-        </Text>
+<Card className="shadow-lg">
+  <CardHeader className="pb-3">
+    <CardTitle className="text-base font-semibold">Main sitemap link</CardTitle>
+    <CardDescription>Primary sitemap URL for your store</CardDescription>
+  </CardHeader>
 
-        <a
-          href={mainSitemapUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 block font-mono text-sm text-indigo-600 hover:underline break-all"
-        >
-          {mainSitemapUrl}
-        </a>
-      </div>
+  <CardContent>
+    <div className="rounded-lg border bg-white p-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <a
+            href={mainSitemapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block font-mono text-sm text-indigo-600 hover:underline break-all"
+          >
+            {mainSitemapUrl}
+          </a>
+        </div>
 
-      <div className="flex items-center gap-2 md:justify-end">
-        <Button
-          variant="outline"
-          onClick={() => navigator.clipboard.writeText(mainSitemapUrl)}
-          className="whitespace-nowrap"
-        >
-          Copy
-        </Button>
+        <div className="flex items-center gap-2 md:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => navigator.clipboard.writeText(mainSitemapUrl)}
+            className="whitespace-nowrap"
+          >
+            Copy
+          </Button>
 
-      <Button
-  onClick={() => window.open(mainSitemapUrl, "_blank", "noopener,noreferrer")}
-  className="whitespace-nowrap bg-gradient-to-r from-primary to-indigo-600 text-white hover:opacity-95"
->
-  Open
-</Button>
-
+          <Button
+            onClick={() => window.open(mainSitemapUrl, "_blank", "noopener,noreferrer")}
+            className="whitespace-nowrap bg-gradient-to-r from-primary to-indigo-600 text-white hover:opacity-95"
+          >
+            Open
+          </Button>
+        </div>
       </div>
     </div>
-  </div>
-</CardContent>
+  </CardContent>
+</Card>
+
 
 
               <div className="flex gap-3 justify-end">
