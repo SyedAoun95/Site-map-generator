@@ -49,6 +49,12 @@ const App = () => {
   // ### CHANGE 1 (ADD THIS)
 const [activeType, setActiveType] = useState(null); // products | collections | blogs | pages | null
 const tableRef = useRef(null);
+// MARK-1: URL list states (for selected type)
+const [urlRows, setUrlRows] = useState([]);
+const [urlLoading, setUrlLoading] = useState(false);
+const [urlError, setUrlError] = useState(null);
+const [urlMeta, setUrlMeta] = useState({ total: 0, limited: false });
+
 
 
   useEffect(() => {
@@ -103,6 +109,11 @@ const tableRef = useRef(null);
     setLoading(true);
     setError(null);
     setResults(null);
+    setActiveType(null);
+setUrlRows([]);
+setUrlMeta({ total: 0, limited: false });
+setUrlError(null);
+
 
     try {
       const response = await fetch('/api/sitemap', {
@@ -138,35 +149,38 @@ const tableRef = useRef(null);
     if (!results) return;
     const dataStr = JSON.stringify(results, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
+   const blobUrl = URL.createObjectURL(dataBlob);
+const link = document.createElement('a');
+link.href = blobUrl;
+
     link.download = 'sitemap-report.json';
     link.click();
   };
 
-  const exportToCSV = () => {
-    if (!results) return;
-    
-    let csv = 'Type,Count\n';
-    csv += `Products,${results.counts.products}\n`;
-    csv += `Collections,${results.counts.collections}\n`;
-    csv += `Blogs,${results.counts.blogs}\n`;
-    csv += `Pages,${results.counts.pages}\n`;
-    csv += `Other,${results.counts.other}\n`;
-    csv += '\nSitemap URL,Type,URL Count\n';
-    
-   dedupeSitemapsPreferNonLocale(results?.sitemaps || []).forEach(sitemap => {
-      csv += `"${sitemap.url}",${sitemap.type},${sitemap.count}\n`;
-    });
+ const exportToCSV = () => {
+  if (!results) return;
 
-    const dataBlob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'sitemap-report.csv';
-    link.click();
-  };
+  let csv = 'Type,Count\n';
+  csv += `Products,${uiCounts.products}\n`;
+  csv += `Collections,${uiCounts.collections}\n`;
+  csv += `Blogs,${uiCounts.blogs}\n`;
+  csv += `Pages,${uiCounts.pages}\n`;
+  csv += `Other,${uiCounts.other}\n`;
+
+  csv += '\nSitemap URL,Type,URL Count\n';
+
+  dedupedSitemaps.forEach((sitemap) => {
+    csv += `"${sitemap.url}",${sitemap.type},${sitemap.count}\n`;
+  });
+
+  const dataBlob = new Blob([csv], { type: 'text/csv' });
+  const blobUrl = URL.createObjectURL(dataBlob);
+const link = document.createElement('a');
+link.href = blobUrl;
+  link.download = 'sitemap-report.csv';
+  link.click();
+};
+
 
   // ### CHANGE A (ADD) - remove locale prefix (/en/, /en-ca/) for dedupe key
 const stripLocaleFromPath = (pathname) =>
@@ -241,14 +255,35 @@ const dedupeSitemapsPreferNonLocale = (list = []) => {
 //   return (nonLocalized || matches[0]).url;
 // };
 
-  const stats = [
-    { title: 'Products', count: results?.counts?.products || 0, icon: Package, color: 'text-blue-600', bgColor: 'bg-blue-50' },
-    { title: 'Collections', count: results?.counts?.collections || 0, icon: Layers, color: 'text-green-600', bgColor: 'bg-green-50' },
-    { title: 'Blogs', count: results?.counts?.blogs || 0, icon: BookOpen, color: 'text-purple-600', bgColor: 'bg-purple-50' },
-    { title: 'Pages', count: results?.counts?.pages || 0, icon: FileText, color: 'text-orange-600', bgColor: 'bg-orange-50' },
-  ];
-// ### FIX 1 (ADD/REPLACE HERE) - dedupe first, then filter
+// 1) pehle dedupe
 const dedupedSitemaps = dedupeSitemapsPreferNonLocale(results?.sitemaps || []);
+
+// 2) phir uiCounts (cards ke liye)
+const uiCounts = dedupedSitemaps.reduce(
+  (acc, s) => {
+    const t = String(s.type || "").toLowerCase();
+    const c = Number(s.count || 0);
+
+    if (t === "products") acc.products += c;
+    else if (t === "collections") acc.collections += c;
+    else if (t === "blogs") acc.blogs += c;
+    else if (t === "pages") acc.pages += c;
+    else acc.other += c;
+
+    return acc;
+  },
+  { products: 0, collections: 0, blogs: 0, pages: 0, other: 0 }
+);
+
+// 3) phir stats array
+const stats = [
+  { title: 'Products', count: uiCounts.products, icon: Package, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  { title: 'Collections', count: uiCounts.collections, icon: Layers, color: 'text-green-600', bgColor: 'bg-green-50' },
+  { title: 'Blogs', count: uiCounts.blogs, icon: BookOpen, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+  { title: 'Pages', count: uiCounts.pages, icon: FileText, color: 'text-orange-600', bgColor: 'bg-orange-50' },
+];
+
+
 
 const filteredSitemaps =
   dedupedSitemaps.filter((s) => {
@@ -256,6 +291,51 @@ const filteredSitemaps =
     return String(s.type || "").toLowerCase() === activeType;
   }) || [];
 
+// MARK-2: get sitemap urls for a type from deduped list
+const getSitemapUrlsByType = (typeKey) => {
+  const t = String(typeKey || "").toLowerCase();
+  return dedupedSitemaps
+    .filter((s) => String(s.type || "").toLowerCase() === t)
+    .map((s) => s.url);
+};
+
+// MARK-2: fetch actual <loc> URLs from sitemap(s)
+const loadUrlsForType = async (typeKey) => {
+  const sitemapUrls = getSitemapUrlsByType(typeKey);
+
+  // reset when no sitemap found
+  if (!sitemapUrls.length) {
+    setUrlRows([]);
+    setUrlMeta({ total: 0, limited: false });
+    setUrlError(null);
+    return;
+  }
+
+  setUrlLoading(true);
+  setUrlError(null);
+  setUrlRows([]);
+
+  try {
+    const res = await fetch("/api/sitemap-urls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sitemapUrls,
+        maxTotal: 2000, // zarurat par 5000 kar dena
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Failed to load sitemap URLs");
+
+    setUrlRows(data.urls || []);
+    setUrlMeta({ total: data.total || 0, limited: !!data.limited });
+  } catch (e) {
+    setUrlError(e?.message || "Failed to load URLs");
+  } finally {
+    setUrlLoading(false);
+  }
+};
 
 
   return (
@@ -434,14 +514,26 @@ const filteredSitemaps =
     <button
       key={stat.title}
       type="button"
-      onClick={() => {
-        setActiveType((prev) => (prev === typeKey ? null : typeKey));
+     onClick={() => {
+  setActiveType((prev) => {
+    const nextType = prev === typeKey ? null : typeKey;
 
-        // scroll to table
-        setTimeout(() => {
-          tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 0);
-      }}
+    if (nextType) {
+      loadUrlsForType(nextType);
+    } else {
+      setUrlRows([]);
+      setUrlMeta({ total: 0, limited: false });
+      setUrlError(null);
+    }
+
+    return nextType;
+  });
+
+  setTimeout(() => {
+    tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 0);
+}}
+
      className="text-left w-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
       aria-pressed={isActive}
       aria-label={`Show ${stat.title} sitemaps`}
@@ -515,8 +607,70 @@ const filteredSitemaps =
                   </div>
                 </CardContent>
               </Card>
+                        {/* MARK-4: Actual URLs list (loc entries) */}
+{activeType && (
+  <Card className="shadow-lg">
+    <CardHeader>
+      <CardTitle className="capitalize">{activeType} URLs</CardTitle>
+      <CardDescription>
+        {urlLoading ? "Loading..." : `Showing ${urlRows.length} URLs`}
+        {urlMeta.total ? ` (Fetched: ${urlMeta.total}${urlMeta.limited ? "+" : ""})` : ""}
+      </CardDescription>
+    </CardHeader>
+
+    <CardContent>
+      {urlError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{urlError}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="rounded-lg border max-h-[420px] overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>URL</TableHead>
+              <TableHead>Last Modified</TableHead>
+              <TableHead>Changefreq</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {urlRows.map((row, i) => (
+              <TableRow key={i}>
+                <TableCell className="font-mono text-sm max-w-xl truncate">
+                  <a
+                    href={row.loc}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {row.loc}
+                  </a>
+                </TableCell>
+                <TableCell className="text-sm">{row.lastmod || "-"}</TableCell>
+                <TableCell className="text-sm">{row.changefreq || "-"}</TableCell>
+              </TableRow>
+            ))}
+
+            {!urlLoading && urlRows.length === 0 && !urlError && (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-8">
+                  No URLs found for this sitemap.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </CardContent>
+  </Card>
+)}
             </div>
           )}
+
+       
+
 
           {!results && !error && !loading && (
             // <Card className="shadow-lg">
