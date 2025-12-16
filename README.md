@@ -535,6 +535,6 @@ If you find this project useful, please consider giving it a ⭐ on GitHub!
 
 **You Can Check Live on Vercel**  https://sitemap-explorer.vercel.app/
 
-**Made By Hamza-Zahid**
+
 
 shopify app dev --use-localhost

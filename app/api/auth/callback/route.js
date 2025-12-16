@@ -5,10 +5,13 @@ import { storeShop } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Verify Shopify HMAC
+ */
 function verifyHmac(queryParams, hmac, secret) {
   const params = { ...queryParams };
   delete params.hmac;
-  delete params.signature; // legacy key, ignore if present
+  delete params.signature;
 
   const sorted = Object.keys(params)
     .sort()
@@ -19,6 +22,7 @@ function verifyHmac(queryParams, hmac, secret) {
       return `${key}=${value}`;
     })
     .join('&');
+    
 
   const hash = crypto
     .createHmac('sha256', secret)
@@ -26,6 +30,28 @@ function verifyHmac(queryParams, hmac, secret) {
     .digest('hex');
 
   return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmac));
+}
+
+/**
+ * Register app/uninstalled webhook
+ */
+async function registerUninstallWebhook(shop, accessToken) {
+  return axios.post(
+    `https://${shop}/admin/api/2024-01/webhooks.json`,
+    {
+      webhook: {
+        topic: 'app/uninstalled',
+        address: `${process.env.SHOPIFY_HOST}/api/webhooks/app-uninstalled`,
+        format: 'json',
+      },
+    },
+    {
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 }
 
 export async function GET(request) {
@@ -44,7 +70,9 @@ export async function GET(request) {
     );
   }
 
-  // 1. Validate state with cookie
+  /**
+   * 1️⃣ Validate OAuth state (CSRF protection)
+   */
   const cookiesHeader = request.headers.get('cookie') || '';
   const stateCookie = cookiesHeader
     .split(';')
@@ -60,7 +88,9 @@ export async function GET(request) {
     );
   }
 
-  // 2. Verify HMAC
+  /**
+   * 2️⃣ Verify Shopify HMAC
+   */
   const queryParamsObj = {};
   for (const [key, value] of searchParams.entries()) {
     queryParamsObj[key] = value;
@@ -75,7 +105,9 @@ export async function GET(request) {
     );
   }
 
-  // 3. Exchange code for access token
+  /**
+   * 3️⃣ Exchange authorization code for access token
+   */
   try {
     const tokenResponse = await axios.post(
       `https://${shop}/admin/oauth/access_token`,
@@ -94,21 +126,34 @@ export async function GET(request) {
 
     const { access_token, scope } = tokenResponse.data;
 
-    // ✅ Store shop credentials in database
+    /**
+     * 4️⃣ Store token securely
+     */
     const stored = storeShop(shop, access_token, scope);
-    
-    if (stored) {
-      console.log('✅ Shop authenticated and stored:', shop);
-      console.log('🔑 Access token saved securely');
-      console.log('🔭 Scopes:', scope);
-    } else {
+
+    if (!stored) {
       console.error('❌ Failed to store shop credentials');
     }
 
+    /**
+     * 5️⃣ Register uninstall webhook (MANDATORY)
+     */
+    try {
+      await registerUninstallWebhook(shop, access_token);
+      console.log('🔔 Uninstall webhook registered');
+    } catch (e) {
+      console.error(
+        '⚠️ Failed to register uninstall webhook',
+        e?.response?.data || e.message
+      );
+    }
+
+    /**
+     * 6️⃣ Redirect to app UI
+     */
     const host = process.env.SHOPIFY_HOST;
     const redirectUrl = `${host}/?shop=${encodeURIComponent(shop)}`;
 
-    // Clear state cookie and redirect to your main UI page
     const response = NextResponse.redirect(redirectUrl);
     response.cookies.set('shopify_oauth_state', '', {
       httpOnly: true,
