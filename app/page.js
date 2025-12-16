@@ -1,6 +1,6 @@
 'use client';
 
-import { AppProvider, Banner, BlockStack, Text, Badge } from '@shopify/polaris';
+import { AppProvider, Banner, BlockStack, InlineStack, Text, Badge } from '@shopify/polaris';
 import createApp from '@shopify/app-bridge';
 import { Redirect } from '@shopify/app-bridge/actions';
 import Image from 'next/image';
@@ -46,6 +46,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+
   // ### CHANGE 1 (ADD THIS)
 const [activeType, setActiveType] = useState(null); // products | collections | blogs | pages | null
 const tableRef = useRef(null);
@@ -62,6 +63,7 @@ const [urlMeta, setUrlMeta] = useState({ total: 0, limited: false });
       setUrl(`https://${shop}`);
     }
   }, [shop]);
+
   useEffect(() => {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -439,6 +441,21 @@ const loadUrlsForType = async (typeKey) => {
                 <span className="font-semibold">{shop}</span>
               </span>
             </Badge>
+{!loading && (
+  <div className="flex items-center gap-2 text-green-700 animate-pulse">
+    <Badge status="success">✅</Badge>
+
+    <Text as="span" variant="bodySm" tone="success">
+      Click Generate Report to start
+    </Text>
+  </div>
+)}
+
+
+
+
+
+
 
      
 
