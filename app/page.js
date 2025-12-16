@@ -441,7 +441,7 @@ const loadUrlsForType = async (typeKey) => {
                 <span className="font-semibold">{shop}</span>
               </span>
             </Badge>
-{!loading && (
+{!loading && !results && (
   <div className="flex items-center gap-2 text-green-700 animate-pulse">
     <Badge status="success">✅</Badge>
 
@@ -450,6 +450,7 @@ const loadUrlsForType = async (typeKey) => {
     </Text>
   </div>
 )}
+
 
 
 
