@@ -5,25 +5,34 @@ import { deleteShop } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 function verifyWebhookHmac(rawBody, hmacHeader, secret) {
+  if (!hmacHeader || !secret) return false;
+
   const hash = crypto
     .createHmac('sha256', secret)
     .update(rawBody, 'utf8')
     .digest('base64');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(hash),
-    Buffer.from(hmacHeader)
-  );
+  const hashBuffer = Buffer.from(hash, 'utf8');
+  const hmacBuffer = Buffer.from(hmacHeader, 'utf8');
+
+  if (hashBuffer.length !== hmacBuffer.length) return false;
+
+  return crypto.timingSafeEqual(hashBuffer, hmacBuffer);
 }
 
 export async function POST(request) {
   const rawBody = await request.text();
+
   const hmac = request.headers.get('x-shopify-hmac-sha256');
   const topic = request.headers.get('x-shopify-topic');
   const shop = request.headers.get('x-shopify-shop-domain');
 
   if (topic !== 'app/uninstalled') {
-    return NextResponse.json({ ok: true });
+    return new NextResponse(null, { status: 200 });
+  }
+
+  if (!hmac || !shop) {
+    return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
   }
 
   const secret = process.env.SHOPIFY_API_SECRET;
@@ -33,10 +42,9 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // ✅ Clean up
-  deleteShop(shop);
+  await deleteShop(shop);
 
   console.log(`🗑 App uninstalled — cleaned data for ${shop}`);
 
-  return NextResponse.json({ success: true });
+  return new NextResponse(null, { status: 200 });
 }
