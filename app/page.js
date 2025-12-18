@@ -1,5 +1,5 @@
 'use client';
-
+export const dynamic = 'force-dynamic';
 import { AppProvider, Banner, BlockStack, InlineStack, Text, Badge } from '@shopify/polaris';
 import createApp from '@shopify/app-bridge';
 import { Redirect } from '@shopify/app-bridge/actions';
@@ -24,9 +24,6 @@ import {
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
-
-
-
 
 import { 
   Table, 
@@ -55,7 +52,44 @@ const [urlRows, setUrlRows] = useState([]);
 const [urlLoading, setUrlLoading] = useState(false);
 const [urlError, setUrlError] = useState(null);
 const [urlMeta, setUrlMeta] = useState({ total: 0, limited: false });
+const [createPageLoading, setCreatePageLoading] = useState(false);
+const [createPageSuccess, setCreatePageSuccess] = useState(null);
+const [createPageError, setCreatePageError] = useState(null);
 
+
+const handleCreateShopifyPage = async () => {
+  if (!activeType || !urlRows.length) {
+    setCreatePageError("Please select a type and load URLs first.");
+    return;
+  }
+
+  setCreatePageLoading(true);
+  setCreatePageError(null);
+  setCreatePageSuccess(null);
+
+  try {
+    const res = await fetch("/api/create-shopify-page", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        shop,
+        urls: urlRows, // send the actual <loc> URLs
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Failed to create Shopify page");
+    }
+
+    setCreatePageSuccess("Shopify page created successfully!");
+  } catch (err) {
+    setCreatePageError(err.message);
+  } finally {
+    setCreatePageLoading(false);
+  }
+};
 
 
   useEffect(() => {
@@ -741,6 +775,22 @@ const loadUrlsForType = async (typeKey) => {
           </TableBody>
         </Table>
       </div>
+      <div className="mt-4 flex gap-3">
+    <Button
+      onClick={handleCreateShopifyPage}
+      disabled={createPageLoading || urlRows.length === 0}
+      className="bg-gradient-to-r from-primary to-indigo-600 text-white"
+    >
+      {createPageLoading ? "Creating..." : "Generate Shopify Page"}
+    </Button>
+
+    {createPageSuccess && (
+      <span className="text-green-600 font-medium">{createPageSuccess}</span>
+    )}
+    {createPageError && (
+      <span className="text-red-600 font-medium">{createPageError}</span>
+    )}
+  </div>
     </CardContent>
   </Card>
 )}

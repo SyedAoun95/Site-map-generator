@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
-import { deleteShop } from '@/lib/db';
+import { updateShop } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,26 +25,38 @@ export async function POST(request) {
 
   const hmac = request.headers.get('x-shopify-hmac-sha256');
   const topic = request.headers.get('x-shopify-topic');
-  const shop = request.headers.get('x-shopify-shop-domain');
+  const shopDomain = request.headers.get('x-shopify-shop-domain');
 
-  if (topic !== 'app/uninstalled') {
+  if (topic !== 'shop/update') {
     return new NextResponse(null, { status: 200 });
   }
 
-  if (!hmac || !shop) {
+  if (!hmac || !shopDomain) {
     return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
   }
 
   const secret = process.env.SHOPIFY_API_SECRET;
 
   if (!verifyWebhookHmac(rawBody, hmac, secret)) {
-    console.error('❌ Invalid webhook HMAC');
+    console.error('❌ Invalid shop/update HMAC');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  await deleteShop(shop);
+  const payload = JSON.parse(rawBody);
 
-  console.log(`🗑 App uninstalled — cleaned data for ${shop}`);
+  //  ONLY store what you actually need
+  const updates = {
+    name: payload.name,
+    email: payload.email,
+    currency: payload.currency,
+    timezone: payload.iana_timezone,
+    primaryDomain: payload.primary_domain?.host,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await updateShop(shopDomain, updates);
+
+  console.log(`🔄 Shop updated — synced data for ${shopDomain}`);
 
   return new NextResponse(null, { status: 200 });
 }
