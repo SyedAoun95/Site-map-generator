@@ -4,7 +4,7 @@ client_id = "5208c4230fe32c04fd35cb7f051000ed"
 name = "Sitemap-explorer"
 
 # Public URL of your app (ngrok URL) – no extra spaces
-application_url = "https://unruddled-mellie-stentoriously.ngrok-free.dev"
+application_url = "https://newton-lamellate-equivocatingly.ngrok-free.dev"
 embedded = true
 
 [webhooks]
@@ -12,12 +12,12 @@ api_version = "2025-10"
 
 [access_scopes]
 # Must match what you're using in .env.local
-scopes = "read_products,read_content,write_content"
+scopes = "write_content"
 optional_scopes = []
 use_legacy_install_flow = false
 
 [auth]
 # Full callback URL for OAuth – must match app/api/auth/callback/route.js
 redirect_urls = [
-  "https://unruddled-mellie-stentoriously.ngrok-free.dev/api/auth/callback"
+  "https://newton-lamellate-equivocatingly.ngrok-free.dev/api/auth/callback"
 ]

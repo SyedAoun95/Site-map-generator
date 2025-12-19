@@ -41,8 +41,8 @@ const App = () => {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
 
-  // ✅ UI state for cards + urls list
-  const [activeType, setActiveType] = useState(null); // products | collections | blogs | pages | null
+
+  const [activeType, setActiveType] = useState(null); 
   const tableRef = useRef(null);
 
   const [urlRows, setUrlRows] = useState([]);
@@ -50,7 +50,7 @@ const App = () => {
   const [urlError, setUrlError] = useState(null);
   const [urlMeta, setUrlMeta] = useState({ total: 0, limited: false });
 
-  // ✅ Cache per type (filled only by prefetch after Generate Report)
+
   const [urlCache, setUrlCache] = useState({
     products: null,
     collections: null,
@@ -58,7 +58,7 @@ const App = () => {
     blogs: null,
   });
 
-  // ✅ Prefetch controls
+
   const prefetchedRef = useRef(false);
   const prefetchPromiseRef = useRef(null);
 
@@ -68,7 +68,7 @@ const App = () => {
     }
   }, [shop]);
 
-  // Shopify embedded auth check
+
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -102,19 +102,18 @@ const App = () => {
           );
         });
     } catch (e) {
-      // silent
+
     }
   }, []);
 
-  // ✅ STEP: Results aate hi auto-prefetch (sirf Generate Report ke baad)
   useEffect(() => {
     if (results) {
       prefetchAllTypes();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [results]);
 
-  // ✅ IMPORTANT: Cache fill hone ke baad activeType wali UI auto-update ho
+
   useEffect(() => {
     if (!activeType) return;
 
@@ -133,7 +132,7 @@ const App = () => {
       return;
     }
 
-    // reset ui
+
     setLoading(true);
     setError(null);
     setResults(null);
@@ -144,7 +143,6 @@ const App = () => {
     setUrlError(null);
     setUrlLoading(false);
 
-    // reset cache + prefetch controls
     prefetchedRef.current = false;
     prefetchPromiseRef.current = null;
     setUrlCache({ products: null, collections: null, pages: null, blogs: null });
@@ -168,7 +166,7 @@ const App = () => {
         return;
       }
 
-      setResults(data); // ✅ MUST
+      setResults(data); 
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
@@ -193,7 +191,7 @@ const App = () => {
     link.click();
   };
 
-  // ✅ locale dedupe helpers
+
   const stripLocaleFromPath = (pathname) =>
     pathname.replace(/^\/[a-z]{2}(-[a-z]{2})?\//i, "/");
 
@@ -233,14 +231,14 @@ const App = () => {
           map.set(key, item);
         }
       } catch (e) {
-        // ignore parsing issues
+
       }
     }
 
     return Array.from(map.values());
   };
 
-  // ✅ Use deduped list for UI
+
   const dedupedSitemaps = dedupeSitemapsPreferNonLocale(results?.sitemaps || []);
 
   const uiCounts = dedupedSitemaps.reduce(
@@ -279,11 +277,11 @@ const App = () => {
       .map((s) => s.url);
   };
 
-  // ✅ Prefetch-only fetcher (NO UI updates, only cache)
+
   const fetchAndCacheType = async (typeKey) => {
     const t = String(typeKey || "").toLowerCase();
 
-    if (urlCache?.[t]) return; // already cached
+    if (urlCache?.[t]) return; 
 
     const sitemapUrls = getSitemapUrlsByType(t);
     if (!sitemapUrls.length) return;
@@ -311,7 +309,7 @@ const App = () => {
     }));
   };
 
-  // ✅ Prefetch all types (Generate Report ke baad)
+
   const prefetchAllTypes = async () => {
     if (prefetchedRef.current) return;
     prefetchedRef.current = true;
@@ -489,7 +487,7 @@ const App = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat) => {
                   const Icon = stat.icon;
-                  const typeKey = stat.title.toLowerCase(); // products/collections/blogs/pages
+                  const typeKey = stat.title.toLowerCase(); 
                   const isActive = activeType === typeKey;
 
                   return (
@@ -501,7 +499,7 @@ const App = () => {
                           const nextType = prev === typeKey ? null : typeKey;
 
                           if (nextType) {
-                            // ✅ NO REQUEST ON CARD CLICK
+
                             const cached = urlCache?.[nextType];
                             if (cached) {
                               setUrlRows(cached.urls || []);
@@ -509,7 +507,7 @@ const App = () => {
                               setUrlError(null);
                               setUrlLoading(false);
                             } else {
-                              // show loading until prefetch fills cache
+
                               setUrlLoading(true);
                               setUrlRows([]);
                               setUrlMeta({ total: 0, limited: false });

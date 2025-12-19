@@ -49,13 +49,16 @@ export async function GET(request) {
 
   // 5. Store state in a cookie and redirect
   const response = NextResponse.redirect(authUrl.toString());
-  response.cookies.set('shopify_oauth_state', state, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    path: '/',
-    maxAge: 60 * 10, // 10 minutes
-  });
+const isProd = process.env.NODE_ENV === 'production';
+
+response.cookies.set('shopify_oauth_state', state, {
+  httpOnly: true,
+  secure: isProd,              // ✅ localhost: false
+  sameSite: isProd ? 'none' : 'lax',
+  path: '/',
+  maxAge: 60 * 10,
+});
+
 
   return response;
 }
