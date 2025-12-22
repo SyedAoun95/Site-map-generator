@@ -54,10 +54,13 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      page: data.page,
-    });
+   const pageUrl = `https://${shop}/pages/${data.page.handle}`;
+
+return NextResponse.json({
+  success: true,
+  pageUrl,
+});
+
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Something went wrong" },

@@ -39,6 +39,15 @@ const App = () => {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  // 🔵 [RECOVERY-STEP-1] store full sitemap data for later HTML generation
+const [sitemapResults, setSitemapResults] = useState(null);
+// 🔵 [RECOVERY-STEP-2A] HTML sitemap creation loading state
+const [creatingPage, setCreatingPage] = useState(false);
+// 🔵 [RECOVERY-STEP-3B.1] success section ke liye page URL
+const [sitemapPageUrl, setSitemapPageUrl] = useState(null);
+
+
+
   const [error, setError] = useState(null);
 
 
@@ -167,12 +176,63 @@ const App = () => {
       }
 
       setResults(data); 
+      // 🔵 [RECOVERY-STEP-1] persist sitemap data for next actions
+setSitemapResults(data);
+
     } catch (err) {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+// 🔵 [RECOVERY-STEP-3B.2] Create HTML Sitemap Page (NO POPUP)
+const handleCreateHtmlSitemap = async () => {
+  if (!sitemapResults || creatingPage) return;
+
+  try {
+    setCreatingPage(true);
+    setError(null);
+    setSitemapPageUrl(null);
+
+   const res = await fetch(`/api/create-sitemap-page?shop=${shop}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sitemapResults, // full analyzed sitemap data
+      }),
+    });
+
+    const data = await res.json();
+
+  if (!res.ok) {
+  let message = "Failed to create sitemap page";
+
+  if (typeof data?.error === "string") {
+    message = data.error;
+  } else if (data?.errors) {
+    // Shopify-style errors object
+    message = Object.values(data.errors).flat().join(", ");
+  }
+
+  setError(message);
+  return;
+}
+
+    // 🔵 [RECOVERY-FIX] build page URL from response
+const pageHandle = data?.page?.handle || "sitemap";
+const pageUrl = `https://${shop}/pages/${pageHandle}`;
+setSitemapPageUrl(pageUrl);
+
+
+    // ✅ SUCCESS: page URL save karo (popup nahi)
+    setSitemapPageUrl(data.pageUrl);
+
+  } catch (e) {
+    setError("Something went wrong while creating sitemap page");
+  } finally {
+    setCreatingPage(false);
+  }
+};
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
@@ -197,6 +257,9 @@ const App = () => {
 
   const isLocalizedPath = (pathname) =>
     /^\/[a-z]{2}(-[a-z]{2})?\//i.test(pathname);
+  // 🔵 [RECOVERY-DEBUG] verify sitemapResults
+console.log("RECOVERY sitemapResults:", sitemapResults);
+
 
   const normalizeSitemapKey = (urlStr) => {
     try {
@@ -354,6 +417,8 @@ const App = () => {
     link.click();
   };
 
+
+
   return (
     <AppProvider i18n={enTranslations}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -433,22 +498,78 @@ const App = () => {
 
             <CardContent>
               <div className="flex flex-col items-center gap-3">
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={loading}
-                  size="lg"
-                  className="group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-                >
-                  <span className="absolute -left-24 top-0 h-full w-24 bg-white/20 transform -skew-x-12 opacity-0 group-hover:opacity-80 group-hover:translate-x-[300%] transition-all duration-600 pointer-events-none" />
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    "Generate Report"
-                  )}
-                </Button>
+              {!results && (
+  <Button
+    onClick={handleAnalyze}
+    disabled={loading}
+    size="lg"
+    className="group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+  >
+    <span className="absolute -left-24 top-0 h-full w-24 bg-white/20 transform -skew-x-12 opacity-0 group-hover:opacity-80 group-hover:translate-x-[300%] transition-all duration-600 pointer-events-none" />
+    {loading ? (
+      <>
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        Analyzing...
+      </>
+    ) : (
+      "Generate Report"
+    )}
+  </Button>
+)}
+
+                {/* 🔵 [RECOVERY-STEP-2B] Create HTML Sitemap Page (same style as Generate Report) */}
+{sitemapResults && (
+  <Button
+    onClick={handleCreateHtmlSitemap}
+    disabled={creatingPage || !!sitemapPageUrl}
+    size="lg"
+    className={`group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg transition-all duration-300 ease-out transform
+      ${sitemapPageUrl ? "opacity-40 cursor-not-allowed hover:scale-100 hover:shadow-lg" : "hover:shadow-2xl hover:-translate-y-1 hover:scale-105"}
+      disabled:cursor-not-allowed overflow-hidden`}
+  >
+
+    <span className="absolute -left-24 top-0 h-full w-24 bg-white/20 transform -skew-x-12 opacity-0 group-hover:opacity-80 group-hover:translate-x-[300%] transition-all duration-600 pointer-events-none" />
+    {creatingPage ? (
+      <>
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        Creating Sitemap Page...
+      </>
+    ) : (
+      "Create HTML Sitemap Page"
+    )}
+  </Button>
+)}
+
+{/* 🔵 [RECOVERY-STEP-3B.3] SUCCESS MESSAGE (INLINE, NO POPUP) */}
+{sitemapPageUrl && (
+  <div className="w-full md:w-1/2 mt-4 rounded-xl border border-green-300 bg-green-50 px-5 py-4 shadow-sm">
+    <div className="flex items-start gap-3">
+      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5" />
+
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-green-800">
+          HTML Sitemap page created successfully
+        </p>
+
+        <p className="text-xs text-green-700 mt-1 break-all">
+          {sitemapPageUrl}
+        </p>
+
+        <a
+          href={sitemapPageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-green-800 hover:underline"
+        >
+          Visit page
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
                 <Input
                   type="text"
