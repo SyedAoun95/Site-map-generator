@@ -40,6 +40,9 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  
+const [sitemapResult, setSitemapResult] = useState(null);
+
 
 
   const [activeType, setActiveType] = useState(null); 
@@ -57,6 +60,13 @@ const App = () => {
     pages: null,
     blogs: null,
   });
+// ✅ STEP 1: store fetched sitemap URLs for HTML sitemap
+const [storedSitemapUrls, setStoredSitemapUrls] = useState({
+  products: [],
+  collections: [],
+  pages: [],
+  blogs: [],
+});
 
 
   const prefetchedRef = useRef(false);
@@ -296,6 +306,12 @@ const App = () => {
     });
 
     const data = await res.json();
+    // ✅ STEP 1: store raw URLs for later HTML sitemap creation
+setStoredSitemapUrls((prev) => ({
+  ...prev,
+  [t]: data.urls || [],
+}));
+
     if (!res.ok) throw new Error(data?.error || "Failed to load sitemap URLs");
 
     setUrlCache((prev) => ({
@@ -330,6 +346,11 @@ const App = () => {
       prefetchPromiseRef.current = null;
     }
   };
+
+  // ✅ DEBUG: verify sitemap URLs are being stored
+useEffect(() => {
+  console.log("✅ Stored Sitemap URLs (DEBUG):", storedSitemapUrls);
+}, [storedSitemapUrls]);
 
   const exportToCSV = () => {
     if (!results) return;
@@ -386,70 +407,193 @@ const App = () => {
             <CardHeader className="p-6">
               <div className="flex items-center gap-4">
                 <div className="min-w-0 space-y-1">
-                  <h3 className="text-lg font-semibold text-slate-900">Analyze Your Sitemap</h3>
+                  {!results && (
+  <>
+    <h3 className="text-lg font-semibold text-slate-900">
+      Analyze Your Sitemap
+    </h3>
 
-                  <Text
-                    as="p"
-                    variant="bodyMd"
-                    tone="subdued"
-                    className="mt-1 max-w-md text-slate-600"
-                  >
-                    This app automatically detects your store URL and analyzes sitemap.xml to generate a clear, actionable report.
-                  </Text>
+    <Text
+      as="p"
+      variant="bodyMd"
+      tone="subdued"
+      className="mt-1 max-w-md text-slate-600"
+    >
+      This app automatically detects your store URL and analyzes sitemap.xml to
+      generate a clear, actionable report.
+    </Text>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {shop ? (
-                      <>
-                        <Badge status="success">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="font-medium">Detected:</span>
-                            <span className="font-semibold">{shop}</span>
-                          </span>
-                        </Badge>
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {shop ? (
+        <>
+          <Badge status="success">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="font-medium">Detected:</span>
+              <span className="font-semibold">{shop}</span>
+            </span>
+          </Badge>
 
-                        {!loading && !results && (
-                          <div className="flex items-center gap-2 text-green-700 animate-pulse">
-                            <Badge status="success">✅</Badge>
-                            <Text as="span" className="text-sm" tone="success">
-                              Click Generate Report to start
-                            </Text>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <Badge status="info">Auto-detect ready</Badge>
-                        <span className="text-xs text-slate-400 italic">
-                          Click Generate Report to start
-                        </span>
-                      </>
-                    )}
-                  </div>
+          {!loading && (
+            <div className="flex items-center gap-2 text-green-700 animate-pulse">
+              <Badge status="success">✅</Badge>
+              <Text as="span" className="text-sm" tone="success">
+                Click Generate Report to start
+              </Text>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <Badge status="info">Auto-detect ready</Badge>
+          <span className="text-xs text-slate-400 italic">
+            Click Generate Report to start
+          </span>
+        </>
+      )}
+    </div>
+  </>
+)}
+
 
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent>
-              <div className="flex flex-col items-center gap-3">
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={loading}
-                  size="lg"
-                  className="group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-                >
-                  <span className="absolute -left-24 top-0 h-full w-24 bg-white/20 transform -skew-x-12 opacity-0 group-hover:opacity-80 group-hover:translate-x-[300%] transition-all duration-600 pointer-events-none" />
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    "Generate Report"
-                  )}
-                </Button>
 
+            <CardContent>
+  {results && (
+  <Card className="border border-green-200 bg-green-50 mb-6">
+    <CardContent className="pt-5">
+      <div className="space-y-3">
+        <Text as="h2" variant="headingMd" fontWeight="bold">
+  Your sitemap report is ready
+</Text>
+
+
+        <Text as="p" variant="bodyMd" tone="subdued">
+          Your store’s sitemap has been successfully analyzed. You’re just one step away from creating a well-organized sitemap page that improves site navigation and search visibility.
+        </Text>
+
+        {/* CTA helper block */}
+        <div className="mt-4 rounded-md bg-white border border-dashed border-green-200 p-4">
+          <Text as="p" variant="bodySm">
+            <strong>Would you like us to create an HTML sitemap page for your store?</strong>
+          </Text>
+
+          <Text as="p" variant="bodySm" tone="subdued" className="mt-1">
+            Click the button below and we’ll generate the sitemap page
+            automatically for you.
+          </Text>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+)}
+
+
+              <div className="flex flex-col items-center gap-3">
+               {!results && (
+  <Button
+    onClick={handleAnalyze}
+    disabled={loading}
+    size="lg"
+    className="group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+  >
+    <span className="absolute -left-24 top-0 h-full w-24 bg-white/20 transform -skew-x-12 opacity-0 group-hover:opacity-80 group-hover:translate-x-[300%] transition-all duration-600 pointer-events-none" />
+    {loading ? (
+      <>
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        Analyzing...
+      </>
+    ) : (
+      "Generate Report"
+    )}
+  </Button>
+)}
+
+ {results && (
+ <Button
+  onClick={async () => {
+    try {
+      setLoading(true);
+      setSitemapResult(null);
+
+      const res = await fetch(
+        `/api/generate-html-sitemap?shop=${encodeURIComponent(shop)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            urls: storedSitemapUrls,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to generate HTML sitemap");
+        return;
+      }
+
+      setSitemapResult({
+        pageUrl: data.pageUrl,
+        counts: data.counts,
+      });
+    } catch (e) {
+      setError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }}
+  disabled={loading}
+  size="lg"
+  className="group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg hover:shadow-2xl transition-all duration-300 ease-out transform hover:-translate-y-1 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+>
+  <span className="absolute -left-24 top-0 h-full w-24 bg-white/20 transform -skew-x-12 opacity-0 group-hover:opacity-80 group-hover:translate-x-[300%] transition-all duration-600 pointer-events-none" />
+  {loading ? (
+    <>
+      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+      Creating Sitemap...
+    </>
+  ) : (
+    "Create HTML Sitemap Page"
+  )}
+</Button>
+
+)}
+{sitemapResult && (
+  <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+    <div className="flex items-start gap-3">
+      <CheckCircle2 className="text-green-600 mt-0.5" />
+      <div>
+        <p className="font-semibold text-green-800">
+          Your HTML Sitemap page has been created successfully.
+        </p>
+
+        <p className="text-sm mt-1 text-green-700">
+          Products: {sitemapResult.counts.products} ·
+          Collections: {sitemapResult.counts.collections} ·
+          Pages: {sitemapResult.counts.pages} ·
+          Blogs: {sitemapResult.counts.blogs}
+        </p>
+
+        <a
+          href={sitemapResult.pageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 mt-2 text-green-800 underline"
+        >
+          View Sitemap Page <ExternalLink className="w-4 h-4" />
+        </a>
+      </div>
+    </div>
+  </div>
+)}
+
+
+                 {!results && (
                 <Input
                   type="text"
                   placeholder="https://www.example.com"
@@ -459,6 +603,7 @@ const App = () => {
                   className="text-lg w-full md:w-1/2"
                   disabled={loading}
                 />
+                )}
               </div>
             </CardContent>
           </Card>
