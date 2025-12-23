@@ -12,7 +12,7 @@ api_version = "2025-10"
 
 [access_scopes]
 # Must match what you're using in .env.local
-scopes = "write_content"
+scopes = "write_content,read_content"
 optional_scopes = []
 use_legacy_install_flow = false
 

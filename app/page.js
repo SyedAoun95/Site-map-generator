@@ -37,14 +37,13 @@ const App = () => {
   const shop = searchParams.get("shop");
 
   const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState(null);
-  // 🔵 [RECOVERY-STEP-1] store full sitemap data for later HTML generation
+ const [loading, setLoading] = useState(false);
+const [results, setResults] = useState(null);
 const [sitemapResults, setSitemapResults] = useState(null);
-// 🔵 [RECOVERY-STEP-2A] HTML sitemap creation loading state
 const [creatingPage, setCreatingPage] = useState(false);
-// 🔵 [RECOVERY-STEP-3B.1] success section ke liye page URL
 const [sitemapPageUrl, setSitemapPageUrl] = useState(null);
+const [pageAlreadyExists, setPageAlreadyExists] = useState(false);
+
 
 
 
@@ -193,38 +192,30 @@ const handleCreateHtmlSitemap = async () => {
     setCreatingPage(true);
     setError(null);
     setSitemapPageUrl(null);
+    setPageAlreadyExists(false);
 
-   const res = await fetch(`/api/create-sitemap-page?shop=${shop}`, {
+    const res = await fetch(`/api/create-sitemap-page?shop=${shop}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sitemapResults, // full analyzed sitemap data
-      }),
+      body: JSON.stringify({ sitemapResults }),
     });
 
     const data = await res.json();
 
-  if (!res.ok) {
-  let message = "Failed to create sitemap page";
+    // 🟢 Page already exists
+    if (data?.alreadyExists) {
+      setPageAlreadyExists(true);
+      setSitemapPageUrl(data.pageUrl);
+      return;
+    }
 
-  if (typeof data?.error === "string") {
-    message = data.error;
-  } else if (data?.errors) {
-    // Shopify-style errors object
-    message = Object.values(data.errors).flat().join(", ");
-  }
+    // ❌ real error
+    if (!res.ok) {
+      setError(data?.error || "Failed to create sitemap page");
+      return;
+    }
 
-  setError(message);
-  return;
-}
-
-    // 🔵 [RECOVERY-FIX] build page URL from response
-const pageHandle = data?.page?.handle || "sitemap";
-const pageUrl = `https://${shop}/pages/${pageHandle}`;
-setSitemapPageUrl(pageUrl);
-
-
-    // ✅ SUCCESS: page URL save karo (popup nahi)
+    // ✅ New page created
     setSitemapPageUrl(data.pageUrl);
 
   } catch (e) {
@@ -233,6 +224,7 @@ setSitemapPageUrl(pageUrl);
     setCreatingPage(false);
   }
 };
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
@@ -518,10 +510,10 @@ console.log("RECOVERY sitemapResults:", sitemapResults);
 )}
 
                 {/* 🔵 [RECOVERY-STEP-2B] Create HTML Sitemap Page (same style as Generate Report) */}
-{sitemapResults && (
+{sitemapResults && !sitemapPageUrl && (
   <Button
     onClick={handleCreateHtmlSitemap}
-    disabled={creatingPage || !!sitemapPageUrl}
+   disabled={creatingPage || pageAlreadyExists}
     size="lg"
     className={`group relative px-8 bg-gradient-to-r from-primary to-indigo-600 text-white shadow-lg transition-all duration-300 ease-out transform
       ${sitemapPageUrl ? "opacity-40 cursor-not-allowed hover:scale-100 hover:shadow-lg" : "hover:shadow-2xl hover:-translate-y-1 hover:scale-105"}
@@ -548,7 +540,8 @@ console.log("RECOVERY sitemapResults:", sitemapResults);
 
       <div className="flex-1">
         <p className="text-sm font-semibold text-green-800">
-          HTML Sitemap page created successfully
+        {pageAlreadyExists ? "Sitemap Page Already Created" : "Create HTML Sitemap Page"}
+
         </p>
 
         <p className="text-xs text-green-700 mt-1 break-all">
