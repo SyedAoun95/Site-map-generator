@@ -55,6 +55,8 @@ async function registerUninstallWebhook(shop, accessToken) {
 }
 
 export async function GET(request) {
+  console.log('🔵 OAuth callback started');
+  
   const url = new URL(request.url);
   const searchParams = url.searchParams;
 
@@ -63,7 +65,10 @@ export async function GET(request) {
   const hmac = searchParams.get('hmac');
   const state = searchParams.get('state');
 
+  console.log('🔍 OAuth params - shop:', shop, 'code exists:', !!code, 'hmac exists:', !!hmac, 'state exists:', !!state);
+
   if (!shop || !code || !hmac) {
+    console.log('❌ Missing required OAuth parameters');
     return NextResponse.json(
       { error: 'Missing required OAuth parameters' },
       { status: 400 }
@@ -81,12 +86,17 @@ export async function GET(request) {
 
   const storedState = stateCookie ? stateCookie.split('=')[1] : null;
 
+  console.log('🔍 State validation - received:', state, 'stored:', storedState);
+
   if (!state || !storedState || state !== storedState) {
+    console.log('❌ Invalid OAuth state');
     return NextResponse.json(
       { error: 'Invalid OAuth state' },
       { status: 400 }
     );
   }
+
+  console.log('✅ State validation passed');
 
   /**
    * 2️⃣ Verify Shopify HMAC
@@ -98,17 +108,24 @@ export async function GET(request) {
 
   const apiSecret = process.env.SHOPIFY_API_SECRET;
 
+  console.log('🔍 Verifying HMAC...');
+
   if (!verifyHmac(queryParamsObj, hmac, apiSecret)) {
+    console.log('❌ HMAC validation failed');
     return NextResponse.json(
       { error: 'HMAC validation failed' },
       { status: 400 }
     );
   }
 
+  console.log('✅ HMAC validation passed');
+
   /**
    * 3️⃣ Exchange authorization code for access token
    */
   try {
+    console.log('🔵 Starting token exchange for shop:', shop);
+    
     const tokenResponse = await axios.post(
       `https://${shop}/admin/oauth/access_token`,
       {
@@ -125,22 +142,36 @@ export async function GET(request) {
     );
 
     const { access_token, scope } = tokenResponse.data;
+    
+    console.log('✅ Received access token');
+    console.log('   - Token length:', access_token?.length);
+    console.log('   - Token prefix:', access_token?.substring(0, 15));
+    console.log('   - Scopes:', scope);
 
     /**
      * 4️⃣ Store token securely
      */
+    console.log('💾 Attempting to store shop:', shop);
+    console.log('   - Access token exists:', !!access_token);
+    console.log('   - Scope exists:', !!scope);
+    
     const stored = storeShop(shop, access_token, scope);
+    
+    console.log('💾 storeShop() returned:', stored);
 
     if (!stored) {
       console.error('❌ Failed to store shop credentials');
+    } else {
+      console.log('✅ Successfully stored shop credentials in database');
     }
 
     /**
      * 5️⃣ Register uninstall webhook (MANDATORY)
      */
     try {
+      console.log('🔔 Registering uninstall webhook...');
       await registerUninstallWebhook(shop, access_token);
-      console.log('🔔 Uninstall webhook registered');
+      console.log('✅ Uninstall webhook registered');
     } catch (e) {
       console.error(
         '⚠️ Failed to register uninstall webhook',
@@ -154,6 +185,8 @@ export async function GET(request) {
     const host = process.env.SHOPIFY_HOST;
     const redirectUrl = `${host}/?shop=${encodeURIComponent(shop)}`;
 
+    console.log('🔄 Redirecting to:', redirectUrl);
+
     const response = NextResponse.redirect(redirectUrl);
     response.cookies.set('shopify_oauth_state', '', {
       httpOnly: true,
@@ -163,10 +196,12 @@ export async function GET(request) {
       maxAge: 0,
     });
 
+    console.log('✅ OAuth callback completed successfully');
+
     return response;
   } catch (err) {
     console.error(
-      'Error exchanging code for access token:',
+      '❌ Error exchanging code for access token:',
       err?.response?.data || err.message
     );
     return NextResponse.json(

@@ -83,13 +83,21 @@ export async function POST(request) {
     const { searchParams } = new URL(request.url);
     const shop = searchParams.get("shop");
 
+    console.log("🔍 DEBUG - Shop parameter:", shop);
+
     if (!shop) {
       return NextResponse.json({ error: "Shop missing" }, { status: 400 });
     }
 
     const accessToken = getAccessToken(shop);
+    
+    console.log("🔍 DEBUG - Access Token exists:", !!accessToken);
+    console.log("🔍 DEBUG - Access Token (first 15 chars):", accessToken?.substring(0, 15));
+    console.log("🔍 DEBUG - Access Token length:", accessToken?.length);
+
     if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.log("❌ ERROR - No access token found for shop:", shop);
+      return NextResponse.json({ error: "Unauthorized - No access token" }, { status: 401 });
     }
 
     /* ----------------------------------------
@@ -100,6 +108,8 @@ export async function POST(request) {
     const collections = await fetchCollections(shop, accessToken);
     const products = await fetchProducts(shop, accessToken);
     const blogs = await fetchBlogs(shop, accessToken);
+
+    console.log("✅ Fetched data - Pages:", pages.length, "Collections:", collections.length, "Products:", products.length, "Blogs:", blogs.length);
 
     /* ----------------------------------------
        🔵 STEP 4 — Build HTML Sitemap
@@ -125,6 +135,8 @@ export async function POST(request) {
       },
     };
 
+    console.log("📤 Attempting to create page at:", `https://${shop}/admin/api/2025-01/pages.json`);
+
     const response = await fetch(
       `https://${shop}/admin/api/2025-01/pages.json`,
       {
@@ -139,10 +151,14 @@ export async function POST(request) {
 
     const data = await response.json();
 
+    console.log("📥 Response status:", response.status);
+    console.log("📥 Response data:", JSON.stringify(data, null, 2));
+
     /* ----------------------------------------
        🟡 Page Already Exists
     ---------------------------------------- */
     if (response.status === 422 && data?.errors?.handle) {
+      console.log("⚠️ Page already exists");
       return NextResponse.json({
         success: true,
         alreadyExists: true,
@@ -154,8 +170,9 @@ export async function POST(request) {
        🔴 Real Error
     ---------------------------------------- */
     if (!response.ok) {
+      console.log("❌ ERROR - Failed to create page:", data);
       return NextResponse.json(
-        { error: "Failed to create sitemap page" },
+        { error: "Failed to create sitemap page", details: data },
         { status: response.status }
       );
     }
@@ -164,12 +181,15 @@ export async function POST(request) {
        ✅ Success
     ---------------------------------------- */
 
+    console.log("✅ SUCCESS - Page created:", data.page?.handle);
+
     return NextResponse.json({
       success: true,
       pageUrl: `https://${shop}/pages/${data.page.handle}`,
     });
 
   } catch (err) {
+    console.log("❌ EXCEPTION:", err);
     return NextResponse.json(
       { error: err.message || "Something went wrong" },
       { status: 500 }

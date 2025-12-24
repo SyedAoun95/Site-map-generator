@@ -1,23 +1,20 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "5208c4230fe32c04fd35cb7f051000ed"
+client_id = "0279a373b257c846e06e359c15a34c5b"
 name = "Sitemap-explorer"
-
-# Public URL of your app (ngrok URL) – no extra spaces
-application_url = "https://newton-lamellate-equivocatingly.ngrok-free.dev"
+application_url = "https://unruddled-mellie-stentoriously.ngrok-free.dev"
 embedded = true
 
 [webhooks]
 api_version = "2025-10"
 
 [access_scopes]
-# Must match what you're using in .env.local
-scopes = "write_content,read_content"
-optional_scopes = []
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_products,read_content,write_content"
+optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-# Full callback URL for OAuth – must match app/api/auth/callback/route.js
 redirect_urls = [
-  "https://newton-lamellate-equivocatingly.ngrok-free.dev/api/auth/callback"
+  "https://unruddled-mellie-stentoriously.ngrok-free.dev/api/auth/callback"
 ]
