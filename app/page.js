@@ -35,6 +35,7 @@ import {
 const App = () => {
   const searchParams = useSearchParams();
   const shop = searchParams.get("shop");
+  
 
   const [url, setUrl] = useState('');
  const [loading, setLoading] = useState(false);
