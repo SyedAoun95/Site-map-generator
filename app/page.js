@@ -35,7 +35,6 @@ import {
 const App = () => {
   const searchParams = useSearchParams();
   const shop = searchParams.get("shop");
-  
 
   const [url, setUrl] = useState('');
  const [loading, setLoading] = useState(false);
@@ -441,53 +440,100 @@ console.log("RECOVERY sitemapResults:", sitemapResults);
 
           {/* Input Section */}
           <Card className="mb-8 shadow-lg">
-            <CardHeader className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="min-w-0 space-y-1">
-                  <h3 className="text-lg font-semibold text-slate-900">Analyze Your Sitemap</h3>
+         <CardHeader className="p-6">
+  <div className="flex items-center gap-4">
+    <div className="min-w-0 space-y-1">
 
-                  <Text
-                    as="p"
-                    variant="bodyMd"
-                    tone="subdued"
-                    className="mt-1 max-w-md text-slate-600"
-                  >
-                    This app automatically detects your store URL and analyzes sitemap.xml to generate a clear, actionable report.
-                  </Text>
+      {/* ✅ BEFORE report generated (same as your current flow) */}
+      {!results ? (
+        <>
+          <h3 className="text-lg font-semibold text-slate-900">Analyze Your Sitemap</h3>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {shop ? (
-                      <>
-                        <Badge status="success">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="font-medium">Detected:</span>
-                            <span className="font-semibold">{shop}</span>
-                          </span>
-                        </Badge>
+          <Text
+            as="p"
+            variant="bodyMd"
+            tone="subdued"
+            className="mt-1 max-w-md text-slate-600"
+          >
+            This app automatically detects your store URL and analyzes sitemap.xml to generate a clear, actionable report.
+          </Text>
 
-                        {!loading && !results && (
-                          <div className="flex items-center gap-2 text-green-700 animate-pulse">
-                            <Badge status="success">✅</Badge>
-                            <Text as="span" className="text-sm" tone="success">
-                              Click Generate Report to start
-                            </Text>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <Badge status="info">Auto-detect ready</Badge>
-                        <span className="text-xs text-slate-400 italic">
-                          Click Generate Report to start
-                        </span>
-                      </>
-                    )}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {shop ? (
+              <>
+                <Badge status="success">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Detected:</span>
+                    <span className="font-semibold">{shop}</span>
+                  </span>
+                </Badge>
+
+                {!loading && (
+                  <div className="flex items-center gap-2 text-green-700 animate-pulse">
+                    <Badge status="success">✅</Badge>
+                    <Text as="span" className="text-sm" tone="success">
+                      Click Generate Report to start
+                    </Text>
                   </div>
+                )}
+              </>
+            ) : (
+              <>
+                <Badge status="info">Auto-detect ready</Badge>
+                <span className="text-xs text-slate-400 italic">
+                  Click Generate Report to start
+                </span>
+              </>
+            )}
+          </div>
+        </>
+      ) : (
+        /* ✅ AFTER report generated (professional message) */
+      <>
+  {/* Polaris heading (no UI disturb) */}
+  <Text as="h3" variant="headingMd" className="text-slate-900">
+    ✅ Your Sitemap Report is Generated.
+  </Text>
 
-                </div>
-              </div>
-            </CardHeader>
+  <Text
+    as="p"
+    variant="bodyMd"
+    tone="subdued"
+    className="mt-1 max-w-xl text-slate-600"
+  >
+    Report complete. Generate a Sitemap Page{" "}
+    <span className="font-semibold text-slate-800">
+      it will be added under{" "}
+      <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-indigo-700 ring-1 ring-indigo-200 shadow-sm shadow-indigo-200/50">
+  Online Store → Pages
+      </span>{" "}
+      for quick navigation.
+    </span>
+  </Text>
+
+<div className="mt-5 flex flex-wrap items-center gap-2">
+  {!sitemapPageUrl && (
+    <div className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 shadow-sm">
+    
+
+      <Badge status="info">
+        Click <span className="font-semibold">Create Sitemap Page</span> below
+      </Badge>
+    </div>
+  )}
+</div>
+
+</>
+
+
+      )}
+
+    </div>
+  </div>
+</CardHeader>
+
+
 
             <CardContent>
               <div className="flex flex-col items-center gap-3">
@@ -528,7 +574,7 @@ console.log("RECOVERY sitemapResults:", sitemapResults);
         Creating Sitemap Page...
       </>
     ) : (
-      "Create HTML Sitemap Page"
+      "Create Sitemap Page"
     )}
   </Button>
 )}

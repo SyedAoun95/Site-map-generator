@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "0279a373b257c846e06e359c15a34c5b"
-name = "Sitemap-explorer"
-application_url = "https://unruddled-mellie-stentoriously.ngrok-free.dev"
+client_id = "3d222f1285f2c2ad750e44330d54c7e5"
+name = "sitemap-explorerH"
+application_url = "https://steadfast-uxorially-christoper.ngrok-free.dev"
 embedded = true
 
 [webhooks]
@@ -10,11 +10,11 @@ api_version = "2025-10"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,read_content,write_content"
+scopes = "read_content,write_content"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
-  "https://unruddled-mellie-stentoriously.ngrok-free.dev/api/auth/callback"
+  "https://steadfast-uxorially-christoper.ngrok-free.dev/api/auth/callback"
 ]
